@@ -7,6 +7,8 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const port = process.env.PORT || 3001;
 
+const userRoute = require("./routes/user.routes");
+
 app
   .use(bodyParser.urlencoded({ extended: true }))
   .use(express.json())
@@ -22,6 +24,9 @@ app
 app.get("/api/", (req, res) => {
   res.send("Welcome ! 8pro Portfolio and Blog");
 });
+
+/* @Routes */
+app.use("/api/account", userRoute);
 
 app.listen(port, () => {
   console.log(`Listening on url: http://localhost:${port}`);
