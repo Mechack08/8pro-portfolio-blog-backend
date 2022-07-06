@@ -2,7 +2,7 @@ const models = require("../models");
 const asyncLib = require("async");
 const bcrypt = require("bcrypt");
 const { Op } = require("sequelize");
-const jwt = require("jsonwebtoken");
+const jwtUtils = require("../utils/jwt.utils");
 
 const EMAIL_REGEX =
   /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
@@ -81,13 +81,6 @@ module.exports = {
   singIn: (req, res) => {
     const { identification, password } = req.body;
 
-    const maxAge = 3 * 24 * 60 * 60 * 1000;
-    const createToken = (id) => {
-      return jwt.sign({ id }, process.env.TOKEN_SECRET, {
-        expiresIn: maxAge,
-      });
-    };
-
     if (identification === null || identification === "")
       return res.json({ message: "username or email is required" });
     if (password === null || password == "")
@@ -121,8 +114,11 @@ module.exports = {
         },
         (find, pwd, done) => {
           if (pwd) {
-            const token = createToken(find.id);
-            res.cookie("PortfolioAndBlog", token, { httpOnly: true, maxAge });
+            const token = jwtUtils.createToken(find.id);
+            res.cookie("PortfolioAndBlog", token, {
+              httpOnly: true,
+              maxAge: 3 * 24 * 60 * 60 * 1000,
+            });
             done(find);
           } else return res.status(403).json({ message: "invalid password" });
         },
@@ -136,5 +132,39 @@ module.exports = {
   signOut: (req, res) => {
     res.cookie("PortfolioAndBlog", "", { maxAge: 1 });
     res.redirect("/");
+  },
+
+  getUserInfos: (req, res) => {
+    const headerAuth = req.headers["authorization"];
+    const userId = jwtUtils.getUserId(headerAuth);
+
+    if (userId === null)
+      return res.status(400).json({ message: "wrong token" });
+
+    asyncLib.waterfall(
+      [
+        (done) => {
+          models.User.findByPk(userId, {
+            attributes: { exclude: ["password"] },
+          })
+            .then((user) => done(null, user))
+            .catch((e) => {
+              return res.status(500).json({
+                error: "Something went wrong, try again later.",
+                details: e.message,
+              });
+            });
+        },
+        (user, done) => {
+          if (!user)
+            return res.status(404).json({ message: "User doesn't exist" });
+
+          done(user);
+        },
+      ],
+      (user) => {
+        return res.status(200).json({ message: "success", user });
+      }
+    );
   },
 };
