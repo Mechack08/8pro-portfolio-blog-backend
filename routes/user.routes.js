@@ -10,4 +10,7 @@ router.route("/signin").post(userController.singIn);
 /* @Signin | http://localhost:3001/api/account/signout */
 router.route("/signout").post(userController.signOut);
 
+/* @Signin | http://localhost:3001/api/account/get-infos */
+router.route("/get-infos").get(userController.getUserInfos);
+
 module.exports = router;
