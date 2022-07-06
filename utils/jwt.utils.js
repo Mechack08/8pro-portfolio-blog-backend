@@ -26,4 +26,26 @@ module.exports = {
 
     return userId;
   },
+
+  /* Middleware */
+  requireAuth: (req, res, next) => {
+    const getToken = req.cookies.PortfolioAndBlog;
+
+    if (getToken) {
+      jwt.verify(
+        getToken,
+        process.env.TOKEN_SECRET,
+        async (err, decodedToken) => {
+          if (err) console.log(err);
+          else {
+            console.log(decodedToken.id);
+            next();
+          }
+        }
+      );
+    } else {
+      console.log("No Token Find");
+      res.json({ msg: "No Token Find" });
+    }
+  },
 };
