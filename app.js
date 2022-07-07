@@ -10,6 +10,7 @@ const port = process.env.PORT || 3001;
 const userRoute = require("./routes/user.routes");
 const backgroundRoute = require("./routes/background.routes");
 const skillRoute = require("./routes/skill.routes");
+const portfolioRoute = require("./routes/portfolio.routes");
 
 app
   .use(bodyParser.urlencoded({ extended: true }))
@@ -31,6 +32,7 @@ app.get("/api/", (req, res) => {
 app.use("/api/account", userRoute);
 app.use("/api", backgroundRoute);
 app.use("/api", skillRoute);
+app.use("/api", portfolioRoute);
 
 app.listen(port, () => {
   console.log(`Listening on url: http://localhost:${port}`);
