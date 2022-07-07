@@ -9,9 +9,11 @@ router.route("/background").post(requireAuth, backgroundController.create);
 router.route("/backgrounds").get(backgroundController.all);
 
 /* @Update | http://localhost:3001/api/background/:id */
-router.route("/background/:id").put(backgroundController.update);
+router.route("/background/:id").put(requireAuth, backgroundController.update);
 
 /* @Update | http://localhost:3001/api/background/:id */
-router.route("/background/:id").delete(backgroundController.delete);
+router
+  .route("/background/:id")
+  .delete(requireAuth, backgroundController.delete);
 
 module.exports = router;
