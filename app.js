@@ -27,7 +27,7 @@ app
   )
   .use("/api/public", express.static("public"));
 
-app.get("/api/", (req, res) => {
+app.get("/", (req, res) => {
   res.send("Welcome ! 8pro Portfolio and Blog");
 });
 
