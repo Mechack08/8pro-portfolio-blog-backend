@@ -13,6 +13,7 @@ const skillRoute = require("./routes/skill.routes");
 const portfolioRoute = require("./routes/portfolio.routes");
 const categoryRoute = require("./routes/category.routes");
 const articleRoute = require("./routes/article.routes");
+const commentRoute = require("./routes/comment.routes");
 
 app
   .use(bodyParser.urlencoded({ extended: true }))
@@ -37,6 +38,7 @@ app.use("/api", skillRoute);
 app.use("/api", portfolioRoute);
 app.use("/api", categoryRoute);
 app.use("/api", articleRoute);
+app.use("/api", commentRoute);
 
 app.listen(port, () => {
   console.log(`Listening on url: http://localhost:${port}`);
