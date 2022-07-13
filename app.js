@@ -40,5 +40,5 @@ app.get("/", (req, res) => {
 // app.use("/api", commentRoute);
 
 app.listen(process.env.PORT || 3001, () => {
-  console.log(`Listening on url: http://localhost:${port}`);
+  console.log(`Listening on url: http://localhost:3001`);
 });
