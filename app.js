@@ -5,7 +5,6 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 
 const app = express();
-const port = process.env.PORT || 3001;
 
 const userRoute = require("./routes/user.routes");
 const backgroundRoute = require("./routes/background.routes");
@@ -40,6 +39,6 @@ app.use("/api", categoryRoute);
 app.use("/api", articleRoute);
 app.use("/api", commentRoute);
 
-app.listen(port, () => {
+app.listen(process.env.PORT || 3001, () => {
   console.log(`Listening on url: http://localhost:${port}`);
 });
