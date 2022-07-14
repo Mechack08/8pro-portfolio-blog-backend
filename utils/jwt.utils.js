@@ -10,18 +10,24 @@ module.exports = {
   },
 
   parseAuthorization: (authorization) => {
-    const authorizationKey = authorization.split(" ");
-    const token = authorizationKey[1];
+    let token = null;
+    if (authorization) {
+      const authorizationKey = authorization.split(" ");
+      token = authorizationKey[1];
+    }
     return token;
   },
 
   getUserId: (authorization) => {
     let userId = null;
-    const token = module.exports.parseAuthorization(authorization);
+    let token = module.exports.parseAuthorization(authorization);
     if (token != null) {
-      const jwToken = jwt.verify(token, process.env.TOKEN_SECRET);
+      jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
+        if (err) token = null;
+        if (decoded) token = decoded;
+      });
 
-      if (jwToken != null) userId = jwToken.id;
+      if (token !== null) userId = token.id;
     }
 
     return userId;
