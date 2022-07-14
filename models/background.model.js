@@ -9,6 +9,10 @@ let backgroundSchema = new mongoose.Schema({
     type: String,
     require: true,
   },
+  period: {
+    type: String,
+    require: true,
+  },
   type: {
     type: String,
     require: true,

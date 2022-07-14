@@ -1,4 +1,4 @@
-const models = require("../models");
+const backgroundModel = require("../models/background.model");
 const asyncLib = require("async");
 
 module.exports = {
@@ -17,7 +17,8 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Background.findOne({ where: { period: period } })
+          backgroundModel
+            .findOne({ period })
             .then((result) => done(null, result))
             .catch((e) => {
               return res.status(500).json({
@@ -29,13 +30,14 @@ module.exports = {
         (result, done) => {
           if (result) return res.status(409).json({ message: "already exist" });
 
-          models.Background.create({
-            institution,
-            position,
-            period,
-            type,
-            description,
-          })
+          backgroundModel
+            .create({
+              institution,
+              position,
+              period,
+              type,
+              description,
+            })
             .then((created) => done(created))
             .catch((e) => {
               return res.status(500).json({
@@ -52,7 +54,8 @@ module.exports = {
   },
 
   all: (req, res) => {
-    models.Background.findAll()
+    backgroundModel
+      .find()
       .then((backgrounds) => {
         if (backgrounds.count <= 0)
           return res.status(404).json({ message: "No data find" });
@@ -82,28 +85,21 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Background.findByPk(id)
-            .then((background) => done(null, background))
-            .catch((e) => {
-              return res.status(500).json({
-                error: "Something went wrong, try again later.",
-                details: e.message,
-              });
-            });
-        },
-        (background, done) => {
-          if (!background)
-            return res.status(404).json({ message: "Doesn't exist" });
-
-          background
-            .update({
-              institution,
-              position,
-              type,
-              description,
-              period,
-            })
-            .then((updated) => done(updated))
+          backgroundModel
+            .findByIdAndUpdate(
+              id,
+              {
+                $set: {
+                  institution,
+                  position,
+                  type,
+                  description,
+                  period,
+                },
+              },
+              { new: true, upsert: true, setDefaultsOnInsert: true }
+            )
+            .then((background) => done(background))
             .catch((e) => {
               return res.status(500).json({
                 error: "Something went wrong, try again later.",
@@ -122,22 +118,9 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Background.findByPk(req.params.id)
-            .then((background) => done(null, background))
-            .catch((e) => {
-              return res.status(500).json({
-                error: "Something went wrong, try again later.",
-                details: e.message,
-              });
-            });
-        },
-        (background, done) => {
-          if (!background)
-            return res.status(404).json({ message: "Doesn't exist" });
-
-          background
-            .destroy()
-            .then((response) => done(response))
+          backgroundModel
+            .findByIdAndDelete(req.params.id)
+            .then((background) => done(background))
             .catch((e) => {
               return res.status(500).json({
                 error: "Something went wrong, try again later.",

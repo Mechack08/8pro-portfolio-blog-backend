@@ -8,7 +8,7 @@ require("./config/mongodb.db");
 const app = express();
 
 const userRoute = require("./routes/user.routes");
-// const backgroundRoute = require("./routes/background.routes");
+const backgroundRoute = require("./routes/background.routes");
 // const skillRoute = require("./routes/skill.routes");
 // const portfolioRoute = require("./routes/portfolio.routes");
 // const categoryRoute = require("./routes/category.routes");
@@ -33,7 +33,7 @@ app.get("/", (req, res) => {
 
 /* @Routes */
 app.use("/api/account", userRoute);
-// app.use("/api", backgroundRoute);
+app.use("/api", backgroundRoute);
 // app.use("/api", skillRoute);
 // app.use("/api", portfolioRoute);
 // app.use("/api", categoryRoute);
