@@ -5,12 +5,12 @@ const userController = require("../controllers/user.controller");
 router.route("/signup").post(userController.signUp);
 
 /* @Signin | http://localhost:3001/api/account/signin */
-// router.route("/signin").post(userController.singIn);
+router.route("/signin").post(userController.singIn);
 
 /* @Signin | http://localhost:3001/api/account/signout */
-// router.route("/signout").post(userController.signOut);
+router.route("/signout").post(userController.signOut);
 
 /* @Signin | http://localhost:3001/api/account/get-infos */
-// router.route("/get-infos").get(userController.getUserInfos);
+router.route("/get-infos").get(userController.getUserInfos);
 
 module.exports = router;
