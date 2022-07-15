@@ -1,4 +1,4 @@
-const models = require("../models");
+const categoryModel = require("../models/category.model");
 const asyncLib = require("async");
 
 module.exports = {
@@ -11,7 +11,8 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Category.findOne({ where: { title } })
+          categoryModel
+            .findOne({ title })
             .then((result) => done(null, result))
             .catch((e) => {
               return res.status(500).json({
@@ -23,12 +24,10 @@ module.exports = {
         (result, done) => {
           if (result) return res.status(409).json({ message: "already exist" });
 
-          const currentDate = new Date();
-          const id = currentDate.getTime();
-          models.Category.create({
-            id,
-            title,
-          })
+          categoryModel
+            .create({
+              title,
+            })
             .then((created) => done(created))
             .catch((e) => {
               return res.status(500).json({
@@ -48,7 +47,8 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Category.findAll()
+          categoryModel
+            .find()
             .then((category) => done(category))
             .catch((e) => {
               return res.status(500).json({
@@ -74,24 +74,13 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Category.findByPk(req.params.id)
-            .then((category) => done(null, category))
-            .catch((e) => {
-              return res.status(500).json({
-                error: "Something went wrong, try again later.",
-                details: e.message,
-              });
-            });
-        },
-        (category, done) => {
-          if (!category)
-            return res.status(404).json({ message: "Doesn't exist" });
-
-          category
-            .update({
-              title,
-            })
-            .then((updated) => done(updated))
+          categoryModel
+            .findByIdAndUpdate(
+              req.params.id,
+              { title },
+              { new: true, upsert: true, setDefaultsOnInsert: true }
+            )
+            .then((category) => done(category))
             .catch((e) => {
               return res.status(500).json({
                 error: "Something went wrong, try again later.",
@@ -100,8 +89,8 @@ module.exports = {
             });
         },
       ],
-      (updated) => {
-        return res.status(201).json({ message: "success", data: updated });
+      (category) => {
+        return res.status(201).json({ message: "success", data: category });
       }
     );
   },
@@ -110,22 +99,9 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Category.findByPk(req.params.id)
+          categoryModel
+            .findByIdAndDelete(req.params.id)
             .then((category) => done(null, category))
-            .catch((e) => {
-              return res.status(500).json({
-                error: "Something went wrong, try again later.",
-                details: e.message,
-              });
-            });
-        },
-        (category, done) => {
-          if (!category)
-            return res.status(404).json({ message: "Doesn't exist" });
-
-          category
-            .destroy()
-            .then((response) => done(response))
             .catch((e) => {
               return res.status(500).json({
                 error: "Something went wrong, try again later.",
