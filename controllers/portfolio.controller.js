@@ -1,4 +1,4 @@
-const models = require("../models");
+const portfolioModel = require("../models/portfolio.model");
 const asyncLib = require("async");
 const multer = require("multer");
 
@@ -39,13 +39,12 @@ module.exports = {
 
     const url = `${req.protocol}://${req.get("host")}/api/`;
     const img = `${url}${req.file.path}`;
-    const currentDate = new Date();
-    const id = currentDate.getTime();
 
     asyncLib.waterfall(
       [
         (done) => {
-          models.Portfolio.findOne({ where: { title } })
+          portfolioModel
+            .findOne({ title })
             .then((result) => done(null, result))
             .catch((e) => {
               return res.status(500).json({
@@ -57,13 +56,13 @@ module.exports = {
         (result, done) => {
           if (result) return res.status(409).json({ message: "already exist" });
 
-          models.Portfolio.create({
-            id,
-            title,
-            url: link,
-            img,
-            category,
-          })
+          portfolioModel
+            .create({
+              title,
+              url: link,
+              img,
+              category,
+            })
             .then((created) => done(created))
             .catch((e) => {
               return res.status(500).json({
@@ -83,7 +82,9 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Portfolio.findAll({ order: [["createdAt", "DESC"]] })
+          portfolioModel
+            .find()
+            .sort({ created_at: -1 })
             .then((portfolio) => done(portfolio))
             .catch((e) => {
               return res.status(500).json({
@@ -112,26 +113,17 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Portfolio.findByPk(req.params.id)
-            .then((portfolio) => done(null, portfolio))
-            .catch((e) => {
-              return res.status(500).json({
-                error: "Something went wrong, try again later.",
-                details: e.message,
-              });
-            });
-        },
-        (portfolio, done) => {
-          if (!portfolio)
-            return res.status(404).json({ message: "Doesn't exist" });
-
-          portfolio
-            .update({
-              title,
-              category,
-              url: link,
-            })
-            .then((updated) => done(updated))
+          portfolioModel
+            .findByIdAndUpdate(
+              req.params.id,
+              {
+                title,
+                category,
+                url: link,
+              },
+              { new: true, upsert: true, setDefaultsOnInsert: true }
+            )
+            .then((portfolio) => done(portfolio))
             .catch((e) => {
               return res.status(500).json({
                 error: "Something went wrong, try again later.",
@@ -140,8 +132,8 @@ module.exports = {
             });
         },
       ],
-      (updated) => {
-        return res.status(201).json({ message: "success", data: updated });
+      (portfolio) => {
+        return res.status(201).json({ message: "success", data: portfolio });
       }
     );
   },
@@ -156,30 +148,22 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Portfolio.findByPk(req.params.id)
-            .then((portfolio) => done(null, portfolio))
-            .catch((e) => {
-              const message = `Error occurred, please try again later.`;
-              return res.status(500).json({ message, data: e.message });
-            });
-        },
-        (portfolio, done) => {
-          if (!portfolio) return res.json({ message: "no data found" });
-
-          portfolio
-            .update({
-              img,
-            })
-            .then((updated) => done(updated))
+          portfolioModel
+            .findByIdAndUpdate(
+              req.params.id,
+              { img },
+              { new: true, upsert: true, setDefaultsOnInsert: true }
+            )
+            .then((portfolio) => done(portfolio))
             .catch((e) => {
               const message = `Error occurred, please try again later.`;
               return res.status(500).json({ message, data: e.message });
             });
         },
       ],
-      (updated) => {
+      (portfolio) => {
         const message = `success`;
-        return res.json({ message, data: updated });
+        return res.json({ message, data: portfolio });
       }
     );
   },
@@ -188,22 +172,9 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Portfolio.findByPk(req.params.id)
-            .then((portfolio) => done(null, portfolio))
-            .catch((e) => {
-              return res.status(500).json({
-                error: "Something went wrong, try again later.",
-                details: e.message,
-              });
-            });
-        },
-        (portfolio, done) => {
-          if (!portfolio)
-            return res.status(404).json({ message: "Doesn't exist" });
-
-          portfolio
-            .destroy()
-            .then((response) => done(response))
+          portfolioModel
+            .findByIdAndDelete(req.params.id)
+            .then((portfolio) => done(portfolio))
             .catch((e) => {
               return res.status(500).json({
                 error: "Something went wrong, try again later.",
