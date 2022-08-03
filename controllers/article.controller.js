@@ -1,11 +1,11 @@
-const models = require("../models");
+const articleModel = require("../models/article.model");
 const asyncLib = require("async");
 const multer = require("multer");
 
 /* set images */
 const multerConfig = multer.diskStorage({
   destination: (req, file, callback) => {
-    callback(null, "public/articles/");
+    callback(null, "public/portfolios/");
   },
   filename: (req, file, callback) => {
     const ext = file.mimetype.split("/")[1];
@@ -48,13 +48,11 @@ module.exports = {
     const url = `${req.protocol}://${req.get("host")}/api/`;
     const img = `${url}${req.file.path}`;
 
-    const currentDate = new Date();
-    const id = currentDate.getTime();
-
     asyncLib.waterfall(
       [
         (done) => {
-          models.Article.findOne({ where: { title } })
+          articleModel
+            .findOne({ title })
             .then((result) => done(null, result))
             .catch((e) => {
               return res.status(500).json({
@@ -66,15 +64,16 @@ module.exports = {
         (result, done) => {
           if (result) return res.status(409).json({ message: "already exist" });
 
-          models.Article.create({
-            id,
-            title,
-            language,
-            category,
-            author,
-            content,
-            img,
-          })
+          articleModel
+            .create({
+              title,
+              language,
+              category,
+              author,
+              content,
+              img,
+              comments: [],
+            })
             .then((created) => done(created))
             .catch((e) => {
               return res.status(500).json({
@@ -94,7 +93,9 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Article.findAll({ order: [["createdAt", "DESC"]] })
+          articleModel
+            .find()
+            .sort({ created_at: -1 })
             .then((article) => done(article))
             .catch((e) => {
               return res.status(500).json({
@@ -106,7 +107,9 @@ module.exports = {
       ],
       (article) => {
         if (!article) return res.status(404).json({ message: "No data find" });
-        return res.status(200).json({ message: "success", data: article });
+        return res
+          .status(200)
+          .json({ message: "success", rows: article.length, data: article });
       }
     );
   },
@@ -130,28 +133,19 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Article.findByPk(req.params.id)
-            .then((article) => done(null, article))
-            .catch((e) => {
-              return res.status(500).json({
-                error: "Something went wrong, try again later.",
-                details: e.message,
-              });
-            });
-        },
-        (article, done) => {
-          if (!article)
-            return res.status(404).json({ message: "Doesn't exist" });
-
-          article
-            .update({
-              title,
-              language,
-              category,
-              author,
-              content,
-            })
-            .then((updated) => done(updated))
+          articleModel
+            .findByIdAndUpdate(
+              req.params.id,
+              {
+                title,
+                language,
+                category,
+                author,
+                content,
+              },
+              { new: true, upsert: true, setDefaultsOnInsert: true }
+            )
+            .then((article) => done(article))
             .catch((e) => {
               return res.status(500).json({
                 error: "Something went wrong, try again later.",
@@ -160,8 +154,8 @@ module.exports = {
             });
         },
       ],
-      (updated) => {
-        return res.status(201).json({ message: "success", data: updated });
+      (article) => {
+        return res.status(201).json({ message: "success", data: article });
       }
     );
   },
@@ -176,21 +170,13 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Article.findByPk(req.params.id)
-            .then((image) => done(null, image))
-            .catch((e) => {
-              const message = `Error occurred, please try again later.`;
-              return res.status(500).json({ message, data: e.message });
-            });
-        },
-        (image, done) => {
-          if (!image) return res.json({ message: "no data found" });
-
-          image
-            .update({
-              img,
-            })
-            .then((updated) => done(updated))
+          articleModel
+            .findByIdAndUpdate(
+              req.params.id,
+              { img },
+              { new: true, upsert: true, setDefaultsOnInsert: true }
+            )
+            .then((image) => done(image))
             .catch((e) => {
               const message = `Error occurred, please try again later.`;
               return res.status(500).json({ message, data: e.message });
@@ -208,22 +194,9 @@ module.exports = {
     asyncLib.waterfall(
       [
         (done) => {
-          models.Article.findByPk(req.params.id)
-            .then((article) => done(null, article))
-            .catch((e) => {
-              return res.status(500).json({
-                error: "Something went wrong, try again later.",
-                details: e.message,
-              });
-            });
-        },
-        (article, done) => {
-          if (!article)
-            return res.status(404).json({ message: "Doesn't exist" });
-
-          article
-            .destroy()
-            .then((response) => done(response))
+          articleModel
+            .findByIdAndDelete(req.params.id)
+            .then((article) => done(article))
             .catch((e) => {
               return res.status(500).json({
                 error: "Something went wrong, try again later.",
@@ -232,8 +205,84 @@ module.exports = {
             });
         },
       ],
-      (response) => {
+      () => {
         return res.status(200).json({ message: "success" });
+      }
+    );
+  },
+
+  addComment: (req, res) => {
+    const { fullname, email, comment } = req.body;
+
+    if (fullname === null || fullname === "")
+      return res.json({ message: "fullname is required" });
+    if (email === null || email === "")
+      return res.json({ message: "email is required" });
+    if (comment === null || comment === "")
+      return res.json({ message: "comment is required" });
+
+    asyncLib.waterfall(
+      [
+        (done) => {
+          articleModel
+            .findByIdAndUpdate(
+              req.params.id,
+              {
+                $push: {
+                  comments: {
+                    fullname,
+                    email,
+                    comment,
+                    timestamp: new Date().getTime(),
+                  },
+                },
+              },
+              { new: true, upsert: true, setDefaultsOnInsert: true }
+            )
+            .then((newComment) => done(newComment))
+            .catch((e) => {
+              return res.status(500).json({
+                error: "Something went wrong, try again later.",
+                details: e.message,
+              });
+            });
+        },
+      ],
+      (newComment) => {
+        const message = `success`;
+        return res.json({ message, data: newComment });
+      }
+    );
+  },
+
+  deleteComment: (req, res) => {
+    asyncLib.waterfall(
+      [
+        (done) => {
+          articleModel
+            .findByIdAndUpdate(
+              req.params.id,
+              {
+                $pull: {
+                  comments: {
+                    _id: req.body.commentId,
+                  },
+                },
+              },
+              { new: true }
+            )
+            .then((newComment) => done(newComment))
+            .catch((e) => {
+              return res.status(500).json({
+                error: "Something went wrong, try again later.",
+                details: e.message,
+              });
+            });
+        },
+      ],
+      (newComment) => {
+        const message = `success`;
+        return res.json({ message });
       }
     );
   },

@@ -16,9 +16,15 @@ router.route("/article/:id").put(requireAuth, articleController.update);
 /* @Update Img | http://localhost:3001/api/article/img/:id */
 router
   .route("/article/img/:id")
-  .put(requireAuth, articleController.upload, articleController.updateImg);
+  .patch(requireAuth, articleController.upload, articleController.updateImg);
 
 /* @Update | http://localhost:3001/api/article/:id */
 router.route("/article/:id").delete(requireAuth, articleController.delete);
+
+/* @Add a comment | http://localhost:3001/api/add/comment/:id */
+router.route("/add/comment/:id").put(articleController.addComment);
+
+/* @Delete a comment | http://localhost:3001/api/delete/comment/:id */
+router.route("/delete/comment/:id").delete(articleController.deleteComment);
 
 module.exports = router;

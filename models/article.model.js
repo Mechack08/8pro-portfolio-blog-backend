@@ -22,6 +22,7 @@ const articleSchema = new mongoose.Schema(
     comments: {
       type: [
         {
+          id: String,
           fullname: String,
           email: String,
           comment: String,
