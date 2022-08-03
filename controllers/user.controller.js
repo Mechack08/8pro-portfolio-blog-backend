@@ -47,7 +47,6 @@ module.exports = {
 
           userModel
             .create({
-              _id: id,
               username: username,
               email: email,
               password: hashedPWD,
