@@ -39,5 +39,5 @@ app.use("/api", categoryRoute);
 app.use("/api", articleRoute);
 
 app.listen(process.env.PORT || 3001, () => {
-  console.log(`Listening on url: http://localhost:3001`);
+  console.log(`Welcome to 8pro portfolio and blog ! 💖`);
 });
