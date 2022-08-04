@@ -2,7 +2,7 @@ const router = require("express").Router();
 const userController = require("../controllers/user.controller");
 const { requireAuth } = require("../utils/jwt.utils");
 
-/* @Get User ID | http://localhost:3001/api/get-id */
+/* @Get User ID | http://localhost:3001/api/account/get-id */
 router.route("/get-id").get(requireAuth, (req, res) => {
   res.status(200).send(res.locals.user._id);
 });
