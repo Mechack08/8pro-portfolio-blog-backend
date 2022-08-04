@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const userModel = require("../models/user.model");
 
 const maxAge = 3 * 24 * 60 * 60 * 1000;
 
@@ -31,6 +32,28 @@ module.exports = {
     }
 
     return userId;
+  },
+
+  checkUser: (req, res, next) => {
+    const token = req.cookies.PortfolioAndBlog;
+
+    if (token) {
+      jwt.verify(token, process.env.TOKEN_SECRET, async (err, decodedToken) => {
+        if (err) {
+          res.locals.user = null;
+          next();
+        } else {
+          let user = await userModel
+            .findById(decodedToken.id)
+            .select("-password");
+          res.locals.user = user;
+          next();
+        }
+      });
+    } else {
+      res.locals.user = null;
+      next();
+    }
   },
 
   /* Middleware */
