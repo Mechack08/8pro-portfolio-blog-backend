@@ -13,6 +13,7 @@ const skillRoute = require("./routes/skill.routes");
 const portfolioRoute = require("./routes/portfolio.routes");
 const categoryRoute = require("./routes/category.routes");
 const articleRoute = require("./routes/article.routes");
+const { checkUser } = require("./utils/jwt.utils");
 
 app
   .use(bodyParser.urlencoded({ extended: true }))
@@ -26,6 +27,7 @@ app
   )
   .use("/api/public", express.static("public"));
 
+app.get("*", checkUser);
 app.get("/", (req, res) => {
   res.send("Welcome ! 8pro Portfolio and Blog");
 });
