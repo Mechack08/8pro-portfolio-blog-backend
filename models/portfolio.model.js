@@ -6,7 +6,7 @@ const portfolioSchema = new mongoose.Schema(
       type: String,
       require: true,
     },
-    ulr: {
+    url: {
       type: String,
       require: true,
     },
